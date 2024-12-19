@@ -2,9 +2,19 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const ErrorMessage = require('../constants/ErrorMessage')
 
+const validatePassword = (password) => {
+    // use regex for password matching
+    return password.length >= 8;
+}
+
 const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
+    console.log('registerUser')
     try {
+        if (!validatePassword(password))
+            return res.status(400).json({
+                message: ErrorMessage.ERROR_SHORT_PASSWORD
+            });
         const userExists = await User.findOne({ email });
         if (userExists)
             return res.status(400).json({
@@ -12,15 +22,15 @@ const registerUser = async (req, res) => {
             });
 
         const user = new User({
-            name, email, password
+            username, email, password
         });
         await user.save();
         const token = jwt.sign({
             id: user._id
         }, process.env.JWT_SECRET, {
-            expiresIn: '1h'
+            expiresIn: '3h'
         });
-        res.status(200).json({
+        return res.status(200).json({
             token
         });
     } catch (error) {
@@ -70,7 +80,6 @@ const verifyToken = async (req, res, next) => {
     try {
         const decoded = await jwt.verify(token, process.env.JWT_SECRET);
         req.id = decoded.id;
-        console.log('req.user in verifyToken', req.user, 'decode', decoded.id)
         next();
     } catch (err) {
         res.status(401).json({
@@ -82,7 +91,6 @@ const verifyToken = async (req, res, next) => {
 const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.id).select('-password');
-        console.log('getUserProfile user', user)
         if (!user) {
             return res.status(404).json({
                 message: ErrorMessage.ERROR_USER_NOT_FOUND

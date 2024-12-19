@@ -7,6 +7,7 @@ const ErrorMessage = {
     "ERROR_USER_NOT_FOUND": "user not found",
     "ERROR_USER_ALREADY_EXISTS": "user already exists",
     "ERROR_INVALID_CREDENTIALS": "invalid credentials",
+    "ERROR_SHORT_PASSWORD": "password length 8 with Digit, Small & UpperCase character"
 }
 
 module.exports = ErrorMessage

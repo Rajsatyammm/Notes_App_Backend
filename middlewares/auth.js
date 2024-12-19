@@ -9,8 +9,6 @@ const authMiddleware = (req, res, next) => {
             message: ErrorMessage.ERROR_AUTH_DENIED
         });
 
-    console.log('inside authMiddleware token present')
-
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
