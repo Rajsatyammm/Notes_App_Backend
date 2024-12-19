@@ -1,15 +1,15 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const ErrorMessage = require('../constants/ErrorMessage')
+const bcrypt = require('bcryptjs')
 
 const validatePassword = (password) => {
     // use regex for password matching
-    return password.length >= 8;
+    return true;
 }
 
 const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
-    console.log('registerUser')
     try {
         if (!validatePassword(password))
             return res.status(400).json({
@@ -107,21 +107,39 @@ const getUserProfile = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    console.log('update profile called')
     try {
-        const user = await User.findById(req.id).select('-password');
-        const { name, password, email } = req.body;
-
+        const user = await User.findById(req.id);
+        const { username, password, email } = req.body;
+        const newUser = new User({ email: user.email, username: user.username });
+        if (user.email != email)
+            newUser.email = email;
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            newUser.password = await bcrypt.hash(password, salt);
+        }
+        if (user.username != username) {
+            const userExist = await User.findOne({ username: username });
+            if (userExist) {
+                return res.status(500).json({
+                    message: ErrorMessage.ERROR_USERNAME_UNIQUE
+                })
+            }
+            else
+                newUser.username = username;
+        }
         await User.findOneAndUpdate(
             { _id: req.id },
             {
-                name: name ? name : user.name,
-                email: email ? email : user.email,
-                password: password ? password : user.password
+                username: newUser.username,
+                password: newUser.password,
+                email: newUser.email
             },
             { new: true }
         )
-        res.status(200);
+
+        res.status(200).json({
+            message: 'User updated'
+        });
     } catch (err) {
         res.status(500).json({
             message: ErrorMessage.SERVER_ERROR
