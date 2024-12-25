@@ -16,14 +16,29 @@ const createNote = async (req, res) => {
 const getNotes = async (req, res) => {
     try {
         const notes = await Note.find({ userId: req.user.id });
-        res.status(200).json(notes);
+        return res.status(200).json(notes);
     } catch (error) {
-        res.status(500).json({ message: ErrorMessage.SERVER_ERROR });
+        return res.status(500).json({ message: ErrorMessage.SERVER_ERROR });
+    }
+};
+
+const getNoteById = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const note = await Note.findById(id);
+        if (!note)
+            res.status(404).json({
+                message: ErrorMessage.NOTE_NOT_FOUND
+            })
+        return res.status(200).json(note);
+    } catch (error) {
+        return res.status(500).json({ message: ErrorMessage.SERVER_ERROR });
     }
 };
 
 const updateNote = async (req, res) => {
-    const { noteId, title, content, category } = req.body;
+    const { title, content, category } = req.body;
+    const noteId = req.params.id;
     try {
         const note = await Note.findById(noteId);
         if (!note) return res.status(404).json({
@@ -71,4 +86,4 @@ const deleteNote = async (req, res) => {
     }
 };
 
-module.exports = { createNote, getNotes, updateNote, deleteNote };
+module.exports = { createNote, getNotes, updateNote, deleteNote, getNoteById };
