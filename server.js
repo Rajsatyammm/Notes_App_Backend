@@ -9,18 +9,12 @@ const noteRoutes = require('./routes/NoteRoutes');
 dotenv.config();
 
 const app = express();
-const allowedOrigins = [process.env.ALLOWED_ORIGIN, "http://localhost:5173"];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: process.env.FRONTEND_PROD_URL | process.env.FRONTEND_DEV_URL,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-}));
+    credentials: true
+}))
 
 app.use(helmet());
 app.use(express.json());
